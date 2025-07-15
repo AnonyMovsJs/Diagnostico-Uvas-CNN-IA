@@ -1,4 +1,4 @@
-[![Python](https://img.shields.io/badge/python-3.8%2B-blue)](#)
+[![Python](https://img.shields.io/badge/python-3.12%2B-blue)](#)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green)](#LICENSE)
 [![Streamlit](https://img.shields.io/badge/Streamlit-App-orange)](#app.py)
 
