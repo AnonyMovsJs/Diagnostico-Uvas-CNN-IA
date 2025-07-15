@@ -16,6 +16,7 @@ VineGuard AI ofrece una solución rápida, precisa y accesible para viticultores
 - [Instalación](#️-instalación)  
 - [Entrenamiento de Modelos](#-entrenamiento-de-modelos)  
 - [Aplicación Web](#-aplicación-web-streamlit)  
+- [Ejecutar en Google Colab](#-ejecutar-en-google-colab)  
 - [Métricas y Resultados](#-métricas-y-resultados)  
 - [Reportes PDF](#-reportes-pdf)  
 - [Futuras Extensiones](#-futuras-extensiones)  
@@ -115,6 +116,14 @@ Cada script generará un archivo `.h5` en `models/` y gráficas de historial y m
 
 
 
+
+---
+
+## 💻 Ejecutar en Google Colab
+
+Para ejecutar el proyecto en Google Colab, haz clic en el siguiente enlace:
+
+[![Abrir en Google Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1b6mvepHBPD60txpCcEhLC-7mRYNWNTPw?usp=sharing)
 
 ---
 
