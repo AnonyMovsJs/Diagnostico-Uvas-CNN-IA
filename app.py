@@ -1,6 +1,6 @@
 """
 VineGuard AI - Sistema de Diagnóstico de Enfermedades en Uvas
-Versión optimizada con Pruebas Estadísticas (Matthews y McNemar)
+Versión optimizada con Pruebas Estadísticas (Matthews y McNemar) + Multiidioma
 """
 
 import streamlit as st
@@ -23,6 +23,203 @@ from scipy import stats
 from sklearn.metrics import matthews_corrcoef, confusion_matrix
 import tempfile
 
+# ======= CONFIGURACIÓN MULTIIDIOMA =======
+TRANSLATIONS = {
+    'es': {
+        'title': '🍇 VineGuard AI',
+        'subtitle': 'Sistema Inteligente de Diagnóstico de Enfermedades en Viñedos',
+        'subtitle_analysis': 'Con Análisis Estadístico Avanzado (Matthews & McNemar)',
+        'language_selector': 'Idioma / Language',
+        'config_title': '⚙️ Configuración',
+        'load_models': '🚀 Cargar Modelos',
+        'models_ready': '✅ Modelos listos',
+        'available_models': '📊 Modelos Disponibles',
+        'info_title': 'ℹ️ Información',
+        'info_description': '''Esta aplicación utiliza modelos de deep learning para detectar enfermedades en hojas de vid:
+        
+        • **Podredumbre Negra**
+        • **Esca** 
+        • **Tizón de la Hoja**
+        • **Hojas Sanas**
+        
+        **Análisis Estadístico:**
+        • Coeficiente de Matthews (con múltiples imágenes)
+        • Prueba de McNemar (con múltiples imágenes)
+        
+        **💡 Tip:** Use la pestaña 'Validación McNemar' para análisis estadístico completo con su propio dataset.''',
+        'load_models_sidebar': '👈 Por favor, carga los modelos desde la barra lateral',
+        'tab_diagnosis': '🔍 Diagnóstico',
+        'tab_statistical': '📊 Análisis Estadístico',
+        'tab_validation': '🔬 Validación McNemar',
+        'tab_info': '📚 Información',
+        'diagnosis_title': '🔍 Diagnóstico de Enfermedades',
+        'input_method': 'Selecciona método de entrada:',
+        'upload_image': '📷 Subir imagen',
+        'use_camera': '📸 Usar cámara',
+        'select_image': 'Selecciona una imagen de hoja de vid',
+        'supported_formats': 'Formatos soportados: JPG, JPEG, PNG',
+        'image_loaded': 'Imagen cargada',
+        'analyze_image': '🔬 Analizar Imagen',
+        'analyzing': 'Analizando imagen...',
+        'analysis_completed': '✅ Análisis completado!',
+        'diagnosis_results': '📋 Resultados del Diagnóstico',
+        'confidence': 'confianza',
+        'consensus_diagnosis': '🤝 Diagnóstico Consensuado',
+        'final_diagnosis': 'Diagnóstico Final:',
+        'coincidence': 'Coincidencia',
+        'probability_distribution': '📊 Distribución de Probabilidades',
+        'treatment_recommendations': '💡 Recomendaciones de Tratamiento',
+        'severity': 'Gravedad:',
+        'recommended_treatment': '🏥 Tratamiento Recomendado',
+        'preventive_measures': '🛡️ Medidas Preventivas',
+        'generate_report': '📄 Generar Reporte',
+        'download_pdf': '📥 Descargar Reporte PDF',
+        'generating_report': 'Generando reporte...',
+        'download_pdf_button': '💾 Descargar PDF',
+        'camera_info': '📸 La función de cámara requiere acceso al hardware del dispositivo',
+        'camera_warning': 'Por favor, usa la opción de subir imagen por ahora',
+        'disease_classes': {
+            'Black_rot': 'Podredumbre Negra',
+            'Esca': 'Esca (Sarampión Negro)', 
+            'Healthy': 'Sana',
+            'Leaf_blight': 'Tizón de la Hoja'
+        }
+    },
+    'en': {
+        'title': '🍇 VineGuard AI',
+        'subtitle': 'Intelligent Vineyard Disease Diagnosis System',
+        'subtitle_analysis': 'With Advanced Statistical Analysis (Matthews & McNemar)',
+        'language_selector': 'Language / Idioma',
+        'config_title': '⚙️ Configuration',
+        'load_models': '🚀 Load Models',
+        'models_ready': '✅ Models ready',
+        'available_models': '📊 Available Models',
+        'info_title': 'ℹ️ Information',
+        'info_description': '''This application uses deep learning models to detect diseases in vine leaves:
+        
+        • **Black Rot**
+        • **Esca** 
+        • **Leaf Blight**
+        • **Healthy Leaves**
+        
+        **Statistical Analysis:**
+        • Matthews Coefficient (with multiple images)
+        • McNemar Test (with multiple images)
+        
+        **💡 Tip:** Use the 'McNemar Validation' tab for complete statistical analysis with your own dataset.''',
+        'load_models_sidebar': '👈 Please load the models from the sidebar',
+        'tab_diagnosis': '🔍 Diagnosis',
+        'tab_statistical': '📊 Statistical Analysis',
+        'tab_validation': '🔬 McNemar Validation',
+        'tab_info': '📚 Information',
+        'diagnosis_title': '🔍 Disease Diagnosis',
+        'input_method': 'Select input method:',
+        'upload_image': '📷 Upload image',
+        'use_camera': '📸 Use camera',
+        'select_image': 'Select a vine leaf image',
+        'supported_formats': 'Supported formats: JPG, JPEG, PNG',
+        'image_loaded': 'Image loaded',
+        'analyze_image': '🔬 Analyze Image',
+        'analyzing': 'Analyzing image...',
+        'analysis_completed': '✅ Analysis completed!',
+        'diagnosis_results': '📋 Diagnosis Results',
+        'confidence': 'confidence',
+        'consensus_diagnosis': '🤝 Consensus Diagnosis',
+        'final_diagnosis': 'Final Diagnosis:',
+        'coincidence': 'Agreement',
+        'probability_distribution': '📊 Probability Distribution',
+        'treatment_recommendations': '💡 Treatment Recommendations',
+        'severity': 'Severity:',
+        'recommended_treatment': '🏥 Recommended Treatment',
+        'preventive_measures': '🛡️ Preventive Measures',
+        'generate_report': '📄 Generate Report',
+        'download_pdf': '📥 Download PDF Report',
+        'generating_report': 'Generating report...',
+        'download_pdf_button': '💾 Download PDF',
+        'camera_info': '📸 Camera function requires device hardware access',
+        'camera_warning': 'Please use the upload image option for now',
+        'disease_classes': {
+            'Black_rot': 'Black Rot',
+            'Esca': 'Esca (Black Measles)', 
+            'Healthy': 'Healthy',
+            'Leaf_blight': 'Leaf Blight'
+        }
+    },
+    'pt': {
+        'title': '🍇 VineGuard AI',
+        'subtitle': 'Sistema Inteligente de Diagnóstico de Doenças em Vinhedos',
+        'subtitle_analysis': 'Com Análise Estatística Avançada (Matthews & McNemar)',
+        'language_selector': 'Idioma / Language',
+        'config_title': '⚙️ Configuração',
+        'load_models': '🚀 Carregar Modelos',
+        'models_ready': '✅ Modelos prontos',
+        'available_models': '📊 Modelos Disponíveis',
+        'info_title': 'ℹ️ Informação',
+        'info_description': '''Esta aplicação usa modelos de deep learning para detectar doenças em folhas de videira:
+        
+        • **Podridão Negra**
+        • **Esca** 
+        • **Queima das Folhas**
+        • **Folhas Saudáveis**
+        
+        **Análise Estatística:**
+        • Coeficiente de Matthews (com múltiplas imagens)
+        • Teste de McNemar (com múltiplas imagens)
+        
+        **💡 Dica:** Use a aba 'Validação McNemar' para análise estatística completa com seu próprio dataset.''',
+        'load_models_sidebar': '👈 Por favor, carregue os modelos da barra lateral',
+        'tab_diagnosis': '🔍 Diagnóstico',
+        'tab_statistical': '📊 Análise Estatística',
+        'tab_validation': '🔬 Validação McNemar',
+        'tab_info': '📚 Informação',
+        'diagnosis_title': '🔍 Diagnóstico de Doenças',
+        'input_method': 'Selecione o método de entrada:',
+        'upload_image': '📷 Carregar imagem',
+        'use_camera': '📸 Usar câmera',
+        'select_image': 'Selecione uma imagem de folha de videira',
+        'supported_formats': 'Formatos suportados: JPG, JPEG, PNG',
+        'image_loaded': 'Imagem carregada',
+        'analyze_image': '🔬 Analisar Imagem',
+        'analyzing': 'Analisando imagem...',
+        'analysis_completed': '✅ Análise concluída!',
+        'diagnosis_results': '📋 Resultados do Diagnóstico',
+        'confidence': 'confiança',
+        'consensus_diagnosis': '🤝 Diagnóstico Consensual',
+        'final_diagnosis': 'Diagnóstico Final:',
+        'coincidence': 'Concordância',
+        'probability_distribution': '📊 Distribuição de Probabilidade',
+        'treatment_recommendations': '💡 Recomendações de Tratamento',
+        'severity': 'Gravidade:',
+        'recommended_treatment': '🏥 Tratamento Recomendado',
+        'preventive_measures': '🛡️ Medidas Preventivas',
+        'generate_report': '📄 Gerar Relatório',
+        'download_pdf': '📥 Baixar Relatório PDF',
+        'generating_report': 'Gerando relatório...',
+        'download_pdf_button': '💾 Baixar PDF',
+        'camera_info': '📸 A função da câmera requer acesso ao hardware do dispositivo',
+        'camera_warning': 'Por favor, use a opção de carregar imagem por enquanto',
+        'disease_classes': {
+            'Black_rot': 'Podridão Negra',
+            'Esca': 'Esca (Sarampo Negro)', 
+            'Healthy': 'Saudável',
+            'Leaf_blight': 'Queima das Folhas'
+        }
+    }
+}
+
+# Función para obtener texto traducido
+def get_text(key, language='es'):
+    """Obtiene texto traducido según el idioma seleccionado"""
+    try:
+        return TRANSLATIONS[language][key]
+    except KeyError:
+        # Fallback a español si la clave no existe
+        return TRANSLATIONS['es'].get(key, key)
+
+# Inicializar idioma en session_state
+if 'language' not in st.session_state:
+    st.session_state.language = 'es'
+
 # Configuración de la página
 st.set_page_config(
     page_title="VineGuard AI",
@@ -30,6 +227,27 @@ st.set_page_config(
     layout="centered",
     initial_sidebar_state="expanded"
 )
+
+# Selector de idioma en la parte superior
+col1, col2, col3 = st.columns([2, 1, 2])
+with col2:
+    language_options = {
+        '🇪🇸 Español': 'es',
+        '🇺🇸 English': 'en', 
+        '🇧🇷 Português': 'pt'
+    }
+    
+    selected_language = st.selectbox(
+        get_text('language_selector', st.session_state.language),
+        options=list(language_options.keys()),
+        index=list(language_options.values()).index(st.session_state.language)
+    )
+    
+    # Actualizar idioma si cambió
+    new_language = language_options[selected_language]
+    if new_language != st.session_state.language:
+        st.session_state.language = new_language
+        st.rerun()
 
 # CSS personalizado
 st.markdown("""
@@ -169,42 +387,100 @@ MODEL_PATHS = {
     "DenseNet": "models/densenet121.h5"
 }
 
-# Clases de enfermedades (ajusta según tus clases reales)
+# Clases de enfermedades (keys en inglés para consistencia)
 DISEASE_CLASSES = ["Black_rot", "Esca", "Healthy", "Leaf_blight"]
-DISEASE_NAMES_ES = {
-    "Black_rot": "Podredumbre Negra",
-    "Esca": "Esca (Sarampión Negro)",
-    "Healthy": "Sana",
-    "Leaf_blight": "Tizón de la Hoja"
-}
 
-# Configuración de carpetas de enfermedades
-DISEASE_FOLDERS = {
-    "Podredumbre Negra": {
-        "key": "Black_rot",
-        "icon": "🔴",
-        "description": "Hongos Guignardia bidwellii",
-        "css_class": "black-rot"
-    },
-    "Esca (Sarampión Negro)": {
-        "key": "Esca",
-        "icon": "🟤",
-        "description": "Complejo de hongos vasculares",
-        "css_class": "esca"
-    },
-    "Hojas Sanas": {
-        "key": "Healthy",
-        "icon": "✅",
-        "description": "Sin enfermedades detectables",
-        "css_class": "healthy"
-    },
-    "Tizón de la Hoja": {
-        "key": "Leaf_blight",
-        "icon": "🟡",
-        "description": "Hongo Isariopsis",
-        "css_class": "leaf-blight"
-    }
-}
+# Función para obtener nombres de enfermedades según idioma
+def get_disease_names(language='es'):
+    """Retorna diccionario de nombres de enfermedades según idioma"""
+    return get_text('disease_classes', language)
+
+# Función para obtener configuración de carpetas según idioma
+def get_disease_folders(language='es'):
+    """Retorna configuración de carpetas según idioma"""
+    disease_names = get_disease_names(language)
+    
+    if language == 'en':
+        return {
+            disease_names["Black_rot"]: {
+                "key": "Black_rot",
+                "icon": "🔴",
+                "description": "Guignardia bidwellii fungi",
+                "css_class": "black-rot"
+            },
+            disease_names["Esca"]: {
+                "key": "Esca",
+                "icon": "🟤", 
+                "description": "Vascular fungi complex",
+                "css_class": "esca"
+            },
+            f"{disease_names['Healthy']} Leaves": {
+                "key": "Healthy",
+                "icon": "✅",
+                "description": "No detectable diseases",
+                "css_class": "healthy"
+            },
+            disease_names["Leaf_blight"]: {
+                "key": "Leaf_blight",
+                "icon": "🟡",
+                "description": "Isariopsis fungi",
+                "css_class": "leaf-blight"
+            }
+        }
+    elif language == 'pt':
+        return {
+            disease_names["Black_rot"]: {
+                "key": "Black_rot",
+                "icon": "🔴",
+                "description": "Fungos Guignardia bidwellii",
+                "css_class": "black-rot"
+            },
+            disease_names["Esca"]: {
+                "key": "Esca",
+                "icon": "🟤",
+                "description": "Complexo de fungos vasculares",
+                "css_class": "esca"
+            },
+            f"Folhas {disease_names['Healthy']}": {
+                "key": "Healthy",
+                "icon": "✅",
+                "description": "Sem doenças detectáveis",
+                "css_class": "healthy"
+            },
+            disease_names["Leaf_blight"]: {
+                "key": "Leaf_blight",
+                "icon": "🟡",
+                "description": "Fungo Isariopsis",
+                "css_class": "leaf-blight"
+            }
+        }
+    else:  # Español por defecto
+        return {
+            disease_names["Black_rot"]: {
+                "key": "Black_rot",
+                "icon": "🔴",
+                "description": "Hongos Guignardia bidwellii",
+                "css_class": "black-rot"
+            },
+            disease_names["Esca"]: {
+                "key": "Esca",
+                "icon": "🟤",
+                "description": "Complejo de hongos vasculares",
+                "css_class": "esca"
+            },
+            f"Hojas {disease_names['Healthy']}": {
+                "key": "Healthy",
+                "icon": "✅",
+                "description": "Sin enfermedades detectables",
+                "css_class": "healthy"
+            },
+            disease_names["Leaf_blight"]: {
+                "key": "Leaf_blight",
+                "icon": "🟡",
+                "description": "Hongo Isariopsis",
+                "css_class": "leaf-blight"
+            }
+        }
 
 # Inicializar estado de sesión
 if 'models_loaded' not in st.session_state:
@@ -273,7 +549,7 @@ def predict_disease(image, model, model_name):
     return {
         'model_name': model_name,
         'predicted_class': predicted_class,
-        'predicted_class_es': DISEASE_NAMES_ES[predicted_class],
+        'predicted_class_es': get_disease_names(st.session_state.language)[predicted_class],
         'confidence': confidence,
         'all_predictions': predictions[0],
         'inference_time': inference_time,
@@ -420,7 +696,8 @@ def process_multiple_images_by_folders(disease_files, models):
         for disease_name, files in disease_files.items():
             if len(files) > 0:
                 # Obtener la clave en inglés de la enfermedad
-                disease_key = DISEASE_FOLDERS[disease_name]["key"]
+                disease_folders = get_disease_folders(st.session_state.language)
+                disease_key = disease_folders[disease_name]["key"]
                 disease_idx = DISEASE_CLASSES.index(disease_key)
 
                 for uploaded_file in files:
@@ -679,7 +956,7 @@ def generate_diagnosis_pdf(image, results, recommendations):
             consensus_confidence = np.mean([r['confidence'] for r in results if r['predicted_class'] == consensus])
 
             fig.text(0.1, 0.6, 'DIAGNÓSTICO PRINCIPAL', fontsize=16, fontweight='bold', color='#2E8B57')
-            fig.text(0.1, 0.55, f'Enfermedad: {DISEASE_NAMES_ES[consensus]}', fontsize=12)
+            fig.text(0.1, 0.55, f'Enfermedad: {get_disease_names(st.session_state.language)[consensus]}', fontsize=12)
             fig.text(0.1, 0.52, f'Confianza: {consensus_confidence:.1%}', fontsize=12)
             fig.text(0.1, 0.49, f'Consenso: {consensus_count}/{len(results)} modelos', fontsize=12)
 
@@ -744,7 +1021,7 @@ def generate_diagnosis_pdf(image, results, recommendations):
             for pred in predictions:
                 consensus_data[pred] = consensus_data.get(pred, 0) + 1
 
-            labels = [DISEASE_NAMES_ES[k] for k in consensus_data.keys()]
+            labels = [get_disease_names(st.session_state.language)[k] for k in consensus_data.keys()]
             values = list(consensus_data.values())
 
             bars4 = ax4.bar(range(len(labels)), values, color=['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4'])
@@ -887,76 +1164,70 @@ def generate_diagnosis_pdf(image, results, recommendations):
 # INTERFAZ PRINCIPAL
 def main():
     # Título y descripción
-    st.title("🍇 VineGuard AI")
-    st.markdown("**Sistema Inteligente de Diagnóstico de Enfermedades en Viñedos**")
-    st.markdown("*Con Análisis Estadístico Avanzado (Matthews & McNemar)*")
+    st.title(get_text('title', st.session_state.language))
+    st.markdown(f"**{get_text('subtitle', st.session_state.language)}**")
+    st.markdown(f"*{get_text('subtitle_analysis', st.session_state.language)}*")
 
     # Sidebar
     with st.sidebar:
-        st.header("⚙️ Configuración")
+        st.header(get_text('config_title', st.session_state.language))
 
         # Cargar modelos si no están cargados
         if not st.session_state.models_loaded:
-            if st.button("🚀 Cargar Modelos", type="primary"):
-                with st.spinner("Cargando modelos..."):
+            if st.button(get_text('load_models', st.session_state.language), type="primary"):
+                with st.spinner(get_text('load_models', st.session_state.language).replace('🚀', 'Cargando modelos...' if st.session_state.language == 'es' else 'Loading models...' if st.session_state.language == 'en' else 'Carregando modelos...')):
                     st.session_state.models = load_models()
                     if st.session_state.models:
                         st.session_state.models_loaded = True
-                        st.success("✅ Modelos cargados exitosamente!")
+                        success_msg = "✅ Modelos cargados exitosamente!" if st.session_state.language == 'es' else "✅ Models loaded successfully!" if st.session_state.language == 'en' else "✅ Modelos carregados com sucesso!"
+                        st.success(success_msg)
                     else:
-                        st.error("❌ No se pudieron cargar los modelos")
+                        error_msg = "❌ No se pudieron cargar los modelos" if st.session_state.language == 'es' else "❌ Could not load models" if st.session_state.language == 'en' else "❌ Não foi possível carregar os modelos"
+                        st.error(error_msg)
         else:
-            st.success("✅ Modelos listos")
+            st.success(get_text('models_ready', st.session_state.language))
 
             # Mostrar modelos disponibles
-            st.subheader("📊 Modelos Disponibles")
+            st.subheader(get_text('available_models', st.session_state.language))
             for model_name in st.session_state.models.keys():
                 st.write(f"• {model_name}")
 
         # Información
         st.markdown("---")
-        st.subheader("ℹ️ Información")
-        st.info("""
-        Esta aplicación utiliza modelos de deep learning para detectar enfermedades en hojas de vid:
-        
-        • **Podredumbre Negra**
-        • **Esca** 
-        • **Tizón de la Hoja**
-        • **Hojas Sanas**
-        
-        **Análisis Estadístico:**
-        • Coeficiente de Matthews (con múltiples imágenes)
-        • Prueba de McNemar (con múltiples imágenes)
-        
-        **💡 Tip:** Use la pestaña 'Validación McNemar' para análisis estadístico completo con su propio dataset.
-        """)
+        st.subheader(get_text('info_title', st.session_state.language))
+        st.info(get_text('info_description', st.session_state.language))
 
     # Contenido principal
     if not st.session_state.models_loaded:
-        st.warning("👈 Por favor, carga los modelos desde la barra lateral")
+        st.warning(get_text('load_models_sidebar', st.session_state.language))
         return
 
     # Tabs principales
-    tab1, tab2, tab3, tab4 = st.tabs(["🔍 Diagnóstico", "📊 Análisis Estadístico", "🔬 Validación McNemar", "📚 Información"])
+    tab1, tab2, tab3, tab4 = st.tabs([
+        get_text('tab_diagnosis', st.session_state.language), 
+        get_text('tab_statistical', st.session_state.language), 
+        get_text('tab_validation', st.session_state.language), 
+        get_text('tab_info', st.session_state.language)
+    ])
 
     with tab1:
-        st.header("🔍 Diagnóstico de Enfermedades")
+        st.header(get_text('diagnosis_title', st.session_state.language))
 
         # Opciones de entrada
         col1, col2 = st.columns([2, 1])
         with col1:
             input_method = st.radio(
-                "Selecciona método de entrada:",
-                ["📷 Subir imagen", "📸 Usar cámara"],
+                get_text('input_method', st.session_state.language),
+                [get_text('upload_image', st.session_state.language), get_text('use_camera', st.session_state.language)],
                 horizontal=True
             )
 
         # Subir imagen
-        if input_method == "📷 Subir imagen":
+        if input_method == get_text('upload_image', st.session_state.language):
             uploaded_file = st.file_uploader(
-                "Selecciona una imagen de hoja de vid",
+                get_text('select_image', st.session_state.language),
                 type=['jpg', 'jpeg', 'png'],
-                help="Formatos soportados: JPG, JPEG, PNG"
+                help=get_text('supported_formats', st.session_state.language)
             )
 
             if uploaded_file is not None:
@@ -967,11 +1238,11 @@ def main():
                 # Mostrar imagen
                 col1, col2 = st.columns([1, 1])
                 with col1:
-                    st.image(image, caption="Imagen cargada", use_container_width=True)
+                    st.image(image, caption=get_text('image_loaded', st.session_state.language), use_container_width=True)
 
                 # Botón de análisis
-                if st.button("🔬 Analizar Imagen", type="primary"):
-                    with st.spinner("Analizando imagen..."):
+                if st.button(get_text('analyze_image', st.session_state.language), type="primary"):
+                    with st.spinner(get_text('analyzing', st.session_state.language)):
                         # Realizar predicciones con todos los modelos
                         results = []
                         for model_name, model in st.session_state.models.items():
@@ -982,10 +1253,10 @@ def main():
 
                 # Mostrar resultados si existen
                 if st.session_state.predictions:
-                    st.success("✅ Análisis completado!")
+                    st.success(get_text('analysis_completed', st.session_state.language))
 
                     # Mostrar resultados por modelo
-                    st.subheader("📋 Resultados del Diagnóstico")
+                    st.subheader(get_text('diagnosis_results', st.session_state.language))
 
                     # Crear columnas para cada modelo
                     cols = st.columns(len(st.session_state.predictions))
@@ -996,12 +1267,12 @@ def main():
                             st.metric(
                                 label=result['model_name'],
                                 value=result['predicted_class_es'],
-                                delta=f"{result['confidence']:.1%} confianza"
+                                delta=f"{result['confidence']:.1%} {get_text('confidence', st.session_state.language)}"
                             )
                             st.caption(f"⏱️ {result['inference_time']:.1f} ms")
 
                     # Consenso de modelos
-                    st.subheader("🤝 Diagnóstico Consensuado")
+                    st.subheader(get_text('consensus_diagnosis', st.session_state.language))
 
                     # Calcular diagnóstico más frecuente
                     predictions = [r['predicted_class'] for r in st.session_state.predictions]
@@ -1017,14 +1288,14 @@ def main():
                     # Mostrar consenso
                     col1, col2, col3 = st.columns([2, 1, 1])
                     with col1:
-                        st.info(f"**Diagnóstico Final:** {DISEASE_NAMES_ES[consensus]}")
+                        st.info(f"**{get_text('final_diagnosis', st.session_state.language)}** {get_disease_names(st.session_state.language)[consensus]}")
                     with col2:
-                        st.metric("Coincidencia", f"{consensus_count}/{len(predictions)}")
+                        st.metric(get_text('coincidence', st.session_state.language), f"{consensus_count}/{len(predictions)}")
                     with col3:
-                        st.metric("Confianza", f"{consensus_confidence:.1%}")
+                        st.metric(get_text('confidence', st.session_state.language).title(), f"{consensus_confidence:.1%}")
 
                     # Gráfico de probabilidades
-                    st.subheader("📊 Distribución de Probabilidades")
+                    st.subheader(get_text('probability_distribution', st.session_state.language))
 
                     # Preparar datos para el gráfico
                     fig, axes = plt.subplots(1, len(st.session_state.predictions),
@@ -1350,11 +1621,12 @@ def main():
             row2_col1, row2_col2 = st.columns(2)
 
             columns = [row1_col1, row1_col2, row2_col1, row2_col2]
-            disease_names = list(DISEASE_FOLDERS.keys())
+            disease_folders = get_disease_folders(st.session_state.language)
+            disease_names = list(disease_folders.keys())
 
             for i, (disease_name, col) in enumerate(zip(disease_names, columns)):
                 with col:
-                    folder_info = DISEASE_FOLDERS[disease_name]
+                    folder_info = disease_folders[disease_name]
 
                     st.markdown(f"""
                     <div class="disease-folder {folder_info['css_class']}">
@@ -1396,7 +1668,7 @@ def main():
                     st.markdown("**Distribución por enfermedad:**")
                     for disease_name, files in disease_files.items():
                         if len(files) > 0:
-                            icon = DISEASE_FOLDERS[disease_name]["icon"]
+                            icon = disease_folders[disease_name]["icon"]
                             st.write(f"{icon} **{disease_name}:** {len(files)} imágenes")
 
                     st.markdown(f"**📈 Total:** {total_images} imágenes")
