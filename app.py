@@ -884,9 +884,11 @@ def generate_interpretation_for_professor(mcnemar_analysis, validation_data):
 # ======= FIN FUNCIONES PARA VALIDACIÓN =======
 
 # Función para generar recomendaciones
-def get_treatment_recommendations(disease):
-    """Obtiene recomendaciones de tratamiento según la enfermedad"""
-    recommendations = {
+def get_treatment_recommendations(disease, language='es'):
+    """Obtiene recomendaciones de tratamiento según la enfermedad e idioma"""
+    
+    # Recomendaciones en español
+    recommendations_es = {
         "Black_rot": {
             "titulo": "🔴 Podredumbre Negra Detectada",
             "gravedad": "Alta",
@@ -947,14 +949,152 @@ def get_treatment_recommendations(disease):
             ]
         }
     }
+    
+    # Recomendaciones en inglés
+    recommendations_en = {
+        "Black_rot": {
+            "titulo": "🔴 Black Rot Detected",
+            "gravedad": "High",
+            "tratamiento": [
+                "Apply protective fungicides (Mancozeb, Captan)",
+                "Remove and destroy all infected parts",
+                "Improve air circulation in the vineyard",
+                "Avoid overhead irrigation"
+            ],
+            "prevencion": [
+                "Prune properly to improve ventilation",
+                "Apply preventive fungicides before flowering",
+                "Remove pruning debris and fallen leaves"
+            ]
+        },
+        "Esca": {
+            "titulo": "🟤 Esca (Black Measles) Detected",
+            "gravedad": "Very High",
+            "tratamiento": [
+                "No direct cure - focus on prevention",
+                "Prune affected parts with disinfected tools",
+                "Apply healing paste on pruning cuts",
+                "Consider replacement of severely affected plants"
+            ],
+            "prevencion": [
+                "Avoid late pruning on humid days",
+                "Disinfect tools between plants",
+                "Protect pruning wounds immediately"
+            ]
+        },
+        "Healthy": {
+            "titulo": "✅ Healthy Plant",
+            "gravedad": "None",
+            "tratamiento": [
+                "No treatment required",
+                "Maintain current management practices"
+            ],
+            "prevencion": [
+                "Continue regular monitoring",
+                "Maintain preventive fungicide program",
+                "Ensure balanced nutrition",
+                "Maintain good soil drainage"
+            ]
+        },
+        "Leaf_blight": {
+            "titulo": "🟡 Leaf Blight Detected",
+            "gravedad": "Moderate",
+            "tratamiento": [
+                "Apply systemic fungicides (Azoxystrobin, Tebuconazole)",
+                "Remove infected leaves",
+                "Improve soil drainage",
+                "Reduce foliage density"
+            ],
+            "prevencion": [
+                "Avoid excess nitrogen",
+                "Keep foliage dry",
+                "Apply preventive fungicides in humid periods"
+            ]
+        }
+    }
+    
+    # Recomendaciones en portugués
+    recommendations_pt = {
+        "Black_rot": {
+            "titulo": "🔴 Podridão Negra Detectada",
+            "gravedad": "Alta",
+            "tratamiento": [
+                "Aplicar fungicidas protetores (Mancozeb, Captan)",
+                "Eliminar e destruir todas as partes infectadas",
+                "Melhorar a circulação de ar no vinhedo",
+                "Evitar irrigação por aspersão"
+            ],
+            "prevencion": [
+                "Podar adequadamente para melhorar ventilação",
+                "Aplicar fungicidas preventivos antes da floração",
+                "Eliminar restos de poda e folhas caídas"
+            ]
+        },
+        "Esca": {
+            "titulo": "🟤 Esca (Sarampo Negro) Detectada",
+            "gravedad": "Muito Alta",
+            "tratamiento": [
+                "Não existe cura direta - foco na prevenção",
+                "Podar partes afetadas com ferramentas desinfetadas",
+                "Aplicar pasta cicatrizante em cortes de poda",
+                "Considerar substituição de plantas severamente afetadas"
+            ],
+            "prevencion": [
+                "Evitar podas tardias em dias úmidos",
+                "Desinfetar ferramentas entre plantas",
+                "Proteger feridas de poda imediatamente"
+            ]
+        },
+        "Healthy": {
+            "titulo": "✅ Planta Saudável",
+            "gravedad": "Nenhuma",
+            "tratamiento": [
+                "Não é necessário tratamento",
+                "Manter as práticas atuais de manejo"
+            ],
+            "prevencion": [
+                "Continuar monitoramento regular",
+                "Manter programa preventivo de fungicidas",
+                "Assegurar nutrição balanceada",
+                "Manter boa drenagem do solo"
+            ]
+        },
+        "Leaf_blight": {
+            "titulo": "🟡 Queima das Folhas Detectada",
+            "gravedad": "Moderada",
+            "tratamiento": [
+                "Aplicar fungicidas sistêmicos (Azoxistrobina, Tebuconazol)",
+                "Remover folhas infectadas",
+                "Melhorar a drenagem do solo",
+                "Reduzir a densidade da folhagem"
+            ],
+            "prevencion": [
+                "Evitar excesso de nitrogênio",
+                "Manter folhagem seca",
+                "Aplicar fungicidas preventivos em períodos úmidos"
+            ]
+        }
+    }
+    
+    # Seleccionar recomendaciones según idioma
+    if language == 'en':
+        recommendations = recommendations_en
+    elif language == 'pt':
+        recommendations = recommendations_pt
+    else:
+        recommendations = recommendations_es
+    
     return recommendations.get(disease, {})
 
 # ======= FUNCIÓN PDF MEJORADA (SIN ANÁLISIS ESTADÍSTICO) =======
-def generate_diagnosis_pdf(image, results, recommendations):
+def generate_diagnosis_pdf(image, results, consensus_disease):
     """Genera un reporte PDF del diagnóstico sin análisis estadístico"""
     
     # Obtener idioma actual
     current_language = st.session_state.language
+    
+    # Obtener recomendaciones en el idioma actual
+    recommendations = get_treatment_recommendations(consensus_disease, current_language)
 
     # Datos de entrenamiento basados en las imágenes proporcionadas
     training_data = {
@@ -1413,7 +1553,7 @@ def main():
 
                     # Recomendaciones
                     st.subheader(get_text('treatment_recommendations', st.session_state.language))
-                    recommendations = get_treatment_recommendations(consensus)
+                    recommendations = get_treatment_recommendations(consensus, st.session_state.language)
 
                     if recommendations:
                         # Título y gravedad
@@ -1447,7 +1587,7 @@ def main():
                             pdf_bytes = generate_diagnosis_pdf(
                                 image,
                                 st.session_state.predictions,
-                                recommendations
+                                consensus
                             )
 
                             st.download_button(
