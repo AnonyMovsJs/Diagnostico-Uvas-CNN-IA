@@ -83,7 +83,15 @@ TRANSLATIONS = {
             'Esca': 'Esca (Sarampión Negro)', 
             'Healthy': 'Sana',
             'Leaf_blight': 'Tizón de la Hoja'
-        }
+        },
+        'detailed_recommendations': 'Recomendaciones Detalladas',
+        'for_diagnosis': 'Para el diagnóstico',
+        'additional_info': 'Información Adicional',
+        'consult_specialist': 'Consulte con un especialista en viticultura',
+        'follow_treatment_schedule': 'Siga un calendario regular de tratamientos',
+        'monitor_evolution': 'Monitoree la evolución de la enfermedad',
+        'document_treatments': 'Documente todos los tratamientos aplicados',
+        'no_specific_recommendations': 'No hay recomendaciones específicas disponibles'
     },
     'en': {
         'title': '🍇 VineGuard AI',
@@ -143,7 +151,15 @@ TRANSLATIONS = {
             'Esca': 'Esca (Black Measles)', 
             'Healthy': 'Healthy',
             'Leaf_blight': 'Leaf Blight'
-        }
+        },
+        'detailed_recommendations': 'Detailed Recommendations',
+        'for_diagnosis': 'For diagnosis',
+        'additional_info': 'Additional Information',
+        'consult_specialist': 'Consult with a viticulture specialist',
+        'follow_treatment_schedule': 'Follow a regular treatment schedule',
+        'monitor_evolution': 'Monitor disease evolution',
+        'document_treatments': 'Document all applied treatments',
+        'no_specific_recommendations': 'No specific recommendations available'
     },
     'pt': {
         'title': '🍇 VineGuard AI',
@@ -203,7 +219,15 @@ TRANSLATIONS = {
             'Esca': 'Esca (Sarampo Negro)', 
             'Healthy': 'Saudável',
             'Leaf_blight': 'Queima das Folhas'
-        }
+        },
+        'detailed_recommendations': 'Recomendações Detalhadas',
+        'for_diagnosis': 'Para o diagnóstico',
+        'additional_info': 'Informações Adicionais',
+        'consult_specialist': 'Consulte um especialista em viticultura',
+        'follow_treatment_schedule': 'Siga um cronograma regular de tratamentos',
+        'monitor_evolution': 'Monitore a evolução da doença',
+        'document_treatments': 'Documente todos os tratamentos aplicados',
+        'no_specific_recommendations': 'Não há recomendações específicas disponíveis'
     }
 }
 
@@ -928,6 +952,9 @@ def get_treatment_recommendations(disease):
 # ======= FUNCIÓN PDF MEJORADA (SIN ANÁLISIS ESTADÍSTICO) =======
 def generate_diagnosis_pdf(image, results, recommendations):
     """Genera un reporte PDF del diagnóstico sin análisis estadístico"""
+    
+    # Obtener idioma actual
+    current_language = st.session_state.language
 
     # Datos de entrenamiento basados en las imágenes proporcionadas
     training_data = {
@@ -949,14 +976,25 @@ def generate_diagnosis_pdf(image, results, recommendations):
             fig.patch.set_facecolor('white')
 
             # Título principal
-            fig.text(0.5, 0.9, 'VineGuard AI', fontsize=24, fontweight='bold',
+            fig.text(0.5, 0.9, get_text('title', current_language), fontsize=24, fontweight='bold',
                      ha='center', color='#2E8B57')
-            fig.text(0.5, 0.85, 'Reporte de Diagnóstico de Enfermedades en Viñedos',
-                     fontsize=14, ha='center', color='#333333')
+            
+            # Subtítulo según idioma
+            if current_language == 'en':
+                subtitle = 'Vineyard Disease Diagnosis Report'
+            elif current_language == 'pt':
+                subtitle = 'Relatório de Diagnóstico de Doenças em Vinhedos'
+            else:  # español
+                subtitle = 'Reporte de Diagnóstico de Enfermedades en Viñedos'
+                
+            fig.text(0.5, 0.85, subtitle, fontsize=14, ha='center', color='#333333')
 
             # Información del reporte
-            fig.text(0.1, 0.75, f'Fecha: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}', fontsize=11)
-            fig.text(0.1, 0.72, f'Modelos utilizados: {len(results)}', fontsize=11)
+            date_label = 'Date:' if current_language == 'en' else 'Data:' if current_language == 'pt' else 'Fecha:'
+            models_label = 'Models used:' if current_language == 'en' else 'Modelos utilizados:' if current_language == 'pt' else 'Modelos utilizados:'
+            
+            fig.text(0.1, 0.75, f'{date_label} {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}', fontsize=11)
+            fig.text(0.1, 0.72, f'{models_label} {len(results)}', fontsize=11)
 
             # Diagnóstico principal
             predictions = [r['predicted_class'] for r in results]
@@ -964,19 +1002,29 @@ def generate_diagnosis_pdf(image, results, recommendations):
             consensus_count = predictions.count(consensus)
             consensus_confidence = np.mean([r['confidence'] for r in results if r['predicted_class'] == consensus])
 
-            fig.text(0.1, 0.6, 'DIAGNÓSTICO PRINCIPAL', fontsize=16, fontweight='bold', color='#2E8B57')
-            fig.text(0.1, 0.55, f'Enfermedad: {get_disease_names(st.session_state.language)[consensus]}', fontsize=12)
-            fig.text(0.1, 0.52, f'Confianza: {consensus_confidence:.1%}', fontsize=12)
-            fig.text(0.1, 0.49, f'Consenso: {consensus_count}/{len(results)} modelos', fontsize=12)
+            # Etiquetas traducidas
+            main_diagnosis_label = 'MAIN DIAGNOSIS' if current_language == 'en' else 'DIAGNÓSTICO PRINCIPAL' if current_language == 'pt' else 'DIAGNÓSTICO PRINCIPAL'
+            disease_label = 'Disease:' if current_language == 'en' else 'Doença:' if current_language == 'pt' else 'Enfermedad:'
+            confidence_label = 'Confidence:' if current_language == 'en' else 'Confiança:' if current_language == 'pt' else 'Confianza:'
+            consensus_label = 'Consensus:' if current_language == 'en' else 'Consenso:' if current_language == 'pt' else 'Consenso:'
+
+            fig.text(0.1, 0.6, main_diagnosis_label, fontsize=16, fontweight='bold', color='#2E8B57')
+            fig.text(0.1, 0.55, f'{disease_label} {get_disease_names(current_language)[consensus]}', fontsize=12)
+            fig.text(0.1, 0.52, f'{confidence_label} {consensus_confidence:.1%}', fontsize=12)
+            fig.text(0.1, 0.49, f'{consensus_label} {consensus_count}/{len(results)} modelos', fontsize=12)
 
             # Recomendaciones clave
             if recommendations:
-                fig.text(0.1, 0.4, 'RECOMENDACIONES CLAVE', fontsize=14, fontweight='bold', color='#2E8B57')
-                fig.text(0.1, 0.35, f'Gravedad: {recommendations.get("gravedad", "N/A")}', fontsize=11)
+                key_recommendations_label = 'KEY RECOMMENDATIONS' if current_language == 'en' else 'RECOMENDAÇÕES PRINCIPAIS' if current_language == 'pt' else 'RECOMENDACIONES CLAVE'
+                severity_label = 'Severity:' if current_language == 'en' else 'Gravidade:' if current_language == 'pt' else 'Gravedad:'
+                action_label = 'Action:' if current_language == 'en' else 'Ação:' if current_language == 'pt' else 'Acción:'
+                
+                fig.text(0.1, 0.4, key_recommendations_label, fontsize=14, fontweight='bold', color='#2E8B57')
+                fig.text(0.1, 0.35, f'{severity_label} {recommendations.get("gravedad", "N/A")}', fontsize=11)
                 action = recommendations.get('tratamiento', ['N/A'])[0] if recommendations.get('tratamiento') else 'N/A'
                 if len(action) > 60:
                     action = action[:60] + "..."
-                fig.text(0.1, 0.32, f'Acción: {action}', fontsize=10)
+                fig.text(0.1, 0.32, f'{action_label} {action}', fontsize=10)
 
             plt.axis('off')
             pdf.savefig(fig, bbox_inches='tight')
@@ -984,7 +1032,10 @@ def generate_diagnosis_pdf(image, results, recommendations):
 
             # ====================== PÁGINA 2: RESULTADOS DETALLADOS ======================
             fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(8.27, 11.69))
-            fig.suptitle('Análisis Detallado de Modelos', fontsize=16, fontweight='bold')
+            
+            # Título traducido
+            detailed_analysis_title = 'Detailed Model Analysis' if current_language == 'en' else 'Análise Detalhada de Modelos' if current_language == 'pt' else 'Análisis Detallado de Modelos'
+            fig.suptitle(detailed_analysis_title, fontsize=16, fontweight='bold')
 
             # Gráfico 1: Confianza por modelo
             model_names = [r['model_name'] for r in results]
@@ -992,8 +1043,13 @@ def generate_diagnosis_pdf(image, results, recommendations):
             colors = ['#3498db', '#2ecc71', '#e74c3c', '#f39c12']
 
             bars1 = ax1.bar(range(len(model_names)), confidences, color=colors)
-            ax1.set_title('Confianza por Modelo')
-            ax1.set_ylabel('Confianza')
+            
+            # Títulos traducidos
+            confidence_title = 'Confidence by Model' if current_language == 'en' else 'Confiança por Modelo' if current_language == 'pt' else 'Confianza por Modelo'
+            confidence_ylabel = 'Confidence' if current_language == 'en' else 'Confiança' if current_language == 'pt' else 'Confianza'
+            
+            ax1.set_title(confidence_title)
+            ax1.set_ylabel(confidence_ylabel)
             ax1.set_xticks(range(len(model_names)))
             ax1.set_xticklabels([name.replace(' ', '\n') for name in model_names], fontsize=9)
 
@@ -1005,8 +1061,13 @@ def generate_diagnosis_pdf(image, results, recommendations):
             # Gráfico 2: Tiempo de inferencia
             inference_times = [r['inference_time'] for r in results]
             bars2 = ax2.bar(range(len(model_names)), inference_times, color=colors)
-            ax2.set_title('Tiempo de Inferencia (ms)')
-            ax2.set_ylabel('Tiempo (ms)')
+            
+            # Títulos traducidos
+            inference_time_title = 'Inference Time (ms)' if current_language == 'en' else 'Tempo de Inferência (ms)' if current_language == 'pt' else 'Tiempo de Inferencia (ms)'
+            time_ylabel = 'Time (ms)' if current_language == 'en' else 'Tempo (ms)' if current_language == 'pt' else 'Tiempo (ms)'
+            
+            ax2.set_title(inference_time_title)
+            ax2.set_ylabel(time_ylabel)
             ax2.set_xticks(range(len(model_names)))
             ax2.set_xticklabels([name.replace(' ', '\n') for name in model_names], fontsize=9)
 
@@ -1018,24 +1079,34 @@ def generate_diagnosis_pdf(image, results, recommendations):
             # Gráfico 3: Distribución de probabilidades
             best_result = max(results, key=lambda x: x['confidence'])
             all_probs = best_result['all_predictions']
-            disease_names_short = [name.replace('_', ' ') for name in DISEASE_CLASSES]
+            
+            # Usar nombres de enfermedades traducidos
+            disease_names_translated = [get_disease_names(current_language)[cls] for cls in DISEASE_CLASSES]
 
-            wedges, texts, autotexts = ax3.pie(all_probs, labels=disease_names_short,
+            wedges, texts, autotexts = ax3.pie(all_probs, labels=disease_names_translated,
                                                autopct='%1.1f%%', startangle=90,
                                                colors=['#FFB6C1', '#98FB98', '#87CEEB', '#DDA0DD'])
-            ax3.set_title(f'Probabilidades\n({best_result["model_name"]})')
+            
+            # Título traducido
+            probabilities_title = f'Probabilities\n({best_result["model_name"]})' if current_language == 'en' else f'Probabilidades\n({best_result["model_name"]})' if current_language == 'pt' else f'Probabilidades\n({best_result["model_name"]})'
+            ax3.set_title(probabilities_title)
 
             # Gráfico 4: Consenso entre modelos
             consensus_data = {}
             for pred in predictions:
                 consensus_data[pred] = consensus_data.get(pred, 0) + 1
 
-            labels = [get_disease_names(st.session_state.language)[k] for k in consensus_data.keys()]
+            labels = [get_disease_names(current_language)[k] for k in consensus_data.keys()]
             values = list(consensus_data.values())
 
             bars4 = ax4.bar(range(len(labels)), values, color=['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4'])
-            ax4.set_title('Consenso entre Modelos')
-            ax4.set_ylabel('Número de Modelos')
+            
+            # Títulos traducidos
+            consensus_title = 'Model Consensus' if current_language == 'en' else 'Consenso entre Modelos' if current_language == 'pt' else 'Consenso entre Modelos'
+            models_ylabel = 'Number of Models' if current_language == 'en' else 'Número de Modelos' if current_language == 'pt' else 'Número de Modelos'
+            
+            ax4.set_title(consensus_title)
+            ax4.set_ylabel(models_ylabel)
             ax4.set_xticks(range(len(labels)))
             ax4.set_xticklabels([label.replace(' ', '\n') for label in labels], fontsize=8)
 
@@ -1051,9 +1122,9 @@ def generate_diagnosis_pdf(image, results, recommendations):
             # ====================== PÁGINA 3: MATRIZ DE CONFUSIÓN Y ENTRENAMIENTO ======================
             fig = plt.figure(figsize=(8.27, 11.69))
 
-            # Título
-            fig.text(0.5, 0.95, 'Matriz de Confusión y Datos de Entrenamiento',
-                     fontsize=16, fontweight='bold', ha='center')
+            # Título traducido
+            confusion_training_title = 'Confusion Matrix and Training Data' if current_language == 'en' else 'Matriz de Confusão e Dados de Treinamento' if current_language == 'pt' else 'Matriz de Confusión y Datos de Entrenamiento'
+            fig.text(0.5, 0.95, confusion_training_title, fontsize=16, fontweight='bold', ha='center')
 
             # Matriz de confusión simulada
             ax_matrix = fig.add_subplot(2, 1, 1)
@@ -1068,20 +1139,28 @@ def generate_diagnosis_pdf(image, results, recommendations):
             ])
 
             im = ax_matrix.imshow(confusion_matrix_data, interpolation='nearest', cmap='Blues')
-            ax_matrix.set_title(f'Matriz de Confusión - {best_result["model_name"]}', fontweight='bold', pad=20)
+            
+            # Título de matriz traducido
+            confusion_matrix_title = f'Confusion Matrix - {best_result["model_name"]}' if current_language == 'en' else f'Matriz de Confusão - {best_result["model_name"]}' if current_language == 'pt' else f'Matriz de Confusión - {best_result["model_name"]}'
+            ax_matrix.set_title(confusion_matrix_title, fontweight='bold', pad=20)
 
-            # Configurar etiquetas
-            class_names_short = ['Black rot', 'Esca', 'Healthy', 'Leaf blight']
-            ax_matrix.set_xticks(range(len(class_names_short)))
-            ax_matrix.set_yticks(range(len(class_names_short)))
-            ax_matrix.set_xticklabels(class_names_short)
-            ax_matrix.set_yticklabels(class_names_short)
-            ax_matrix.set_xlabel('Predicción', fontweight='bold')
-            ax_matrix.set_ylabel('Real', fontweight='bold')
+            # Configurar etiquetas con nombres traducidos
+            class_names_translated = [get_disease_names(current_language)[cls] for cls in DISEASE_CLASSES]
+            ax_matrix.set_xticks(range(len(class_names_translated)))
+            ax_matrix.set_yticks(range(len(class_names_translated)))
+            ax_matrix.set_xticklabels(class_names_translated)
+            ax_matrix.set_yticklabels(class_names_translated)
+            
+            # Etiquetas de ejes traducidas
+            prediction_label = 'Prediction' if current_language == 'en' else 'Predição' if current_language == 'pt' else 'Predicción'
+            actual_label = 'Actual' if current_language == 'en' else 'Real' if current_language == 'pt' else 'Real'
+            
+            ax_matrix.set_xlabel(prediction_label, fontweight='bold')
+            ax_matrix.set_ylabel(actual_label, fontweight='bold')
 
             # Añadir números en cada celda
-            for i in range(len(class_names_short)):
-                for j in range(len(class_names_short)):
+            for i in range(len(class_names_translated)):
+                for j in range(len(class_names_translated)):
                     text = ax_matrix.text(j, i, confusion_matrix_data[i, j],
                                           ha="center", va="center",
                                           color="white" if confusion_matrix_data[i, j] > 100 else "black",
@@ -1131,29 +1210,34 @@ def generate_diagnosis_pdf(image, results, recommendations):
 
             # ====================== PÁGINA 4: RECOMENDACIONES ======================
             fig = plt.figure(figsize=(8.27, 11.69))
-            fig.text(0.5, 0.95, 'Recomendaciones de Tratamiento', fontsize=16, fontweight='bold', ha='center')
+            treatment_recommendations_title = 'Treatment Recommendations' if current_language == 'en' else 'Recomendações de Tratamento' if current_language == 'pt' else 'Recomendaciones de Tratamiento'
+            fig.text(0.5, 0.95, treatment_recommendations_title, fontsize=16, fontweight='bold', ha='center')
 
             if recommendations:
                 fig.text(0.1, 0.85, recommendations.get('titulo', ''), fontsize=14, fontweight='bold', color='#B22222')
-                fig.text(0.1, 0.8, f"Gravedad: {recommendations.get('gravedad', 'N/A')}", fontsize=12, fontweight='bold')
+                
+                severity_label = 'Severity:' if current_language == 'en' else 'Gravidade:' if current_language == 'pt' else 'Gravedad:'
+                fig.text(0.1, 0.8, f"{severity_label} {recommendations.get('gravedad', 'N/A')}", fontsize=12, fontweight='bold')
 
                 # Tratamientos
-                fig.text(0.1, 0.7, 'TRATAMIENTOS RECOMENDADOS:', fontsize=12, fontweight='bold')
+                recommended_treatments_label = 'RECOMMENDED TREATMENTS:' if current_language == 'en' else 'TRATAMENTOS RECOMENDADOS:' if current_language == 'pt' else 'TRATAMIENTOS RECOMENDADOS:'
+                fig.text(0.1, 0.7, recommended_treatments_label, fontsize=12, fontweight='bold')
                 y_pos = 0.65
                 for i, item in enumerate(recommendations.get('tratamiento', []), 1):
                     fig.text(0.1, y_pos, f"{i}. {item}", fontsize=10)
                     y_pos -= 0.04
 
                 # Prevención
-                fig.text(0.1, 0.4, 'MEDIDAS PREVENTIVAS:', fontsize=12, fontweight='bold')
+                preventive_measures_label = 'PREVENTIVE MEASURES:' if current_language == 'en' else 'MEDIDAS PREVENTIVAS:' if current_language == 'pt' else 'MEDIDAS PREVENTIVAS:'
+                fig.text(0.1, 0.4, preventive_measures_label, fontsize=12, fontweight='bold')
                 y_pos = 0.35
                 for i, item in enumerate(recommendations.get('prevencion', []), 1):
                     fig.text(0.1, y_pos, f"{i}. {item}", fontsize=10)
                     y_pos -= 0.04
 
             # Nota
-            fig.text(0.1, 0.1, 'Nota: Consulte con un especialista antes de aplicar tratamientos.',
-                     fontsize=10, style='italic')
+            note_text = 'Note: Consult with a specialist before applying treatments.' if current_language == 'en' else 'Nota: Consulte um especialista antes de aplicar tratamentos.' if current_language == 'pt' else 'Nota: Consulte con un especialista antes de aplicar tratamientos.'
+            fig.text(0.1, 0.1, note_text, fontsize=10, style='italic')
 
             plt.axis('off')
             pdf.savefig(fig, bbox_inches='tight')
