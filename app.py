@@ -49,7 +49,7 @@ TRANSLATIONS = {
         **💡 Tip:** Use la pestaña 'Validación McNemar' para análisis estadístico completo con su propio dataset.''',
         'load_models_sidebar': '👈 Por favor, carga los modelos desde la barra lateral',
         'tab_diagnosis': '🔍 Diagnóstico',
-        'tab_statistical': '📊 Análisis Estadístico',
+        'tab_statistical': '📊 Análisis Estadístico', 
         'tab_validation': '🔬 Validación McNemar',
         'tab_info': '📚 Información',
         'diagnosis_title': '🔍 Diagnóstico de Enfermedades',
@@ -228,7 +228,13 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Selector de idioma en la parte superior
+# ======= SELECTOR DE IDIOMA EN LA PARTE SUPERIOR =======
+st.markdown("""
+<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 10px; border-radius: 10px; margin-bottom: 20px;">
+<h4 style="color: white; text-align: center; margin: 0;">🌐 Language / Idioma</h4>
+</div>
+""", unsafe_allow_html=True)
+
 col1, col2, col3 = st.columns([2, 1, 2])
 with col2:
     language_options = {
@@ -238,9 +244,10 @@ with col2:
     }
     
     selected_language = st.selectbox(
-        get_text('language_selector', st.session_state.language),
+        "",  # Sin label porque ya tenemos el título arriba
         options=list(language_options.keys()),
-        index=list(language_options.values()).index(st.session_state.language)
+        index=list(language_options.values()).index(st.session_state.language),
+        key="main_language_selector"
     )
     
     # Actualizar idioma si cambió
@@ -248,6 +255,8 @@ with col2:
     if new_language != st.session_state.language:
         st.session_state.language = new_language
         st.rerun()
+
+st.markdown("---")
 
 # CSS personalizado
 st.markdown("""
@@ -1319,7 +1328,7 @@ def main():
                     st.pyplot(fig)
 
                     # Recomendaciones
-                    st.subheader("💡 Recomendaciones de Tratamiento")
+                    st.subheader(get_text('treatment_recommendations', st.session_state.language))
                     recommendations = get_treatment_recommendations(consensus)
 
                     if recommendations:
@@ -1338,19 +1347,19 @@ def main():
                                 st.success(f"Gravedad: {recommendations['gravedad']}")
 
                         # Tratamiento
-                        with st.expander("🏥 Tratamiento Recomendado", expanded=True):
+                        with st.expander(get_text('recommended_treatment', st.session_state.language), expanded=True):
                             for item in recommendations['tratamiento']:
                                 st.write(f"• {item}")
 
                         # Prevención
-                        with st.expander("🛡️ Medidas Preventivas"):
+                        with st.expander(get_text('preventive_measures', st.session_state.language)):
                             for item in recommendations['prevencion']:
                                 st.write(f"• {item}")
 
                     # Botón para generar reporte
-                    st.subheader("📄 Generar Reporte")
-                    if st.button("📥 Descargar Reporte PDF"):
-                        with st.spinner("Generando reporte..."):
+                    st.subheader(get_text('generate_report', st.session_state.language))
+                    if st.button(get_text('download_pdf', st.session_state.language)):
+                        with st.spinner(get_text('generating_report', st.session_state.language)):
                             pdf_bytes = generate_diagnosis_pdf(
                                 image,
                                 st.session_state.predictions,
@@ -1358,18 +1367,18 @@ def main():
                             )
 
                             st.download_button(
-                                label="💾 Descargar PDF",
+                                label=get_text('download_pdf_button', st.session_state.language),
                                 data=pdf_bytes,
                                 file_name=f"diagnostico_vineguard_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
                                 mime="application/pdf"
                             )
 
         else:  # Usar cámara
-            st.info("📸 La función de cámara requiere acceso al hardware del dispositivo")
-            st.warning("Por favor, usa la opción de subir imagen por ahora")
+            st.info(get_text('camera_info', st.session_state.language))
+            st.warning(get_text('camera_warning', st.session_state.language))
 
     with tab2:
-        st.header("📊 Análisis Estadístico de Modelos")
+        st.header(get_text('tab_statistical', st.session_state.language))
 
         # Verificar si hay análisis de validación real disponible
         if st.session_state.mcnemar_analysis and st.session_state.mcnemar_analysis.get('real_data', False):
