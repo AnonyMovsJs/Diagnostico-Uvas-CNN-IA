@@ -1455,6 +1455,20 @@ Valores próximos a +1 indicam previsão perfeita, 0 indica previsão aleatória
             'description': '描述:',
             'symptoms': '症状:',
             'favorable_conditions': '有利条件:'
+        },
+        'detailed_recommendations': '详细建议',
+        'for_diagnosis': '诊断结果',
+        'additional_info': '附加信息',
+        'consult_specialist': '咨询葡萄栽培专家',
+        'follow_treatment_schedule': '遵循定期治疗计划',
+        'monitor_evolution': '监测疾病进展',
+        'document_treatments': '记录所有应用的治疗',
+        'no_specific_recommendations': '无特定建议可用',
+        'disease_classes': {
+            'Black_rot': '黑腐病',
+            'Esca': '埃斯卡病（黑麻疹)', 
+            'Healthy': '健康',
+            'Leaf_blight': '叶枯病'
         }
     }
 }
@@ -2540,6 +2554,9 @@ def get_treatment_recommendations(disease, lang=None):
 def generate_diagnosis_pdf(image, results, recommendations):
     """Genera un reporte PDF del diagnóstico sin análisis estadístico"""
 
+    # Obtener idioma actual
+    current_language = st.session_state.get('language', 'es')
+
     # Datos de entrenamiento basados en las imágenes proporcionadas
     training_data = {
         "CNN Simple": {"epochs": 10, "time": "4.2 h", "accuracy": "96.18%", "val_accuracy": "96.71%"},
@@ -2565,28 +2582,100 @@ def generate_diagnosis_pdf(image, results, recommendations):
             # Título principal
             fig.text(0.5, 0.9, 'VineGuard AI', fontsize=24, fontweight='bold',
                      ha='center', color='#2E8B57')
-            fig.text(0.5, 0.85, 'Reporte de Diagnóstico de Enfermedades en Viñedos',
-                     fontsize=14, ha='center', color='#333333')
+            
+            # Título del reporte traducido
+            report_title = {
+                'es': 'Reporte de Diagnóstico de Enfermedades en Viñedos',
+                'en': 'Vineyard Disease Diagnosis Report',
+                'pt': 'Relatório de Diagnóstico de Doenças em Vinhedos',
+                'zh': '葡萄园疾病诊断报告'
+            }.get(current_language, 'Reporte de Diagnóstico de Enfermedades en Viñedos')
+            
+            fig.text(0.5, 0.85, report_title, fontsize=14, ha='center', color='#333333')
 
-            # Información del reporte
-            fig.text(0.1, 0.75, f'Fecha: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}', fontsize=11)
-            fig.text(0.1, 0.72, f'Modelos utilizados: {len(results)}', fontsize=11)
+            # Información del reporte traducida
+            date_label = {
+                'es': 'Fecha:',
+                'en': 'Date:',
+                'pt': 'Data:',
+                'zh': '日期:'
+            }.get(current_language, 'Fecha:')
+            
+            models_label = {
+                'es': 'Modelos utilizados:',
+                'en': 'Models used:',
+                'pt': 'Modelos utilizados:',
+                'zh': '使用的模型:'
+            }.get(current_language, 'Modelos utilizados:')
+            
+            fig.text(0.1, 0.75, f'{date_label} {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}', fontsize=11)
+            fig.text(0.1, 0.72, f'{models_label} {len(results)}', fontsize=11)
 
-            # Diagnóstico principal
+            # Diagnóstico principal traducido
             predictions = [r['predicted_class'] for r in results]
             consensus = max(set(predictions), key=predictions.count)
             consensus_count = predictions.count(consensus)
             consensus_confidence = np.mean([r['confidence'] for r in results if r['predicted_class'] == consensus])
 
-            fig.text(0.1, 0.6, 'DIAGNÓSTICO PRINCIPAL', fontsize=16, fontweight='bold', color='#2E8B57')
-            fig.text(0.1, 0.55, f'Enfermedad: {get_disease_name(consensus)}', fontsize=12)
-            fig.text(0.1, 0.52, f'Confianza: {consensus_confidence:.1%}', fontsize=12)
-            fig.text(0.1, 0.49, f'Consenso: {consensus_count}/{len(results)} modelos', fontsize=12)
+            main_diagnosis_label = {
+                'es': 'DIAGNÓSTICO PRINCIPAL',
+                'en': 'MAIN DIAGNOSIS',
+                'pt': 'DIAGNÓSTICO PRINCIPAL',
+                'zh': '主要诊断'
+            }.get(current_language, 'DIAGNÓSTICO PRINCIPAL')
+            
+            disease_label = {
+                'es': 'Enfermedad:',
+                'en': 'Disease:',
+                'pt': 'Doença:',
+                'zh': '疾病:'
+            }.get(current_language, 'Enfermedad:')
+            
+            confidence_label = {
+                'es': 'Confianza:',
+                'en': 'Confidence:',
+                'pt': 'Confiança:',
+                'zh': '置信度:'
+            }.get(current_language, 'Confianza:')
 
-            # Recomendaciones clave
+            fig.text(0.1, 0.6, main_diagnosis_label, fontsize=16, fontweight='bold', color='#2E8B57')
+            fig.text(0.1, 0.55, f'{disease_label} {t(f"diseases.{consensus}", current_language)}', fontsize=12)
+            fig.text(0.1, 0.52, f'{confidence_label} {consensus_confidence:.1%}', fontsize=12)
+            
+            consensus_label = {
+                'es': 'Consenso:',
+                'en': 'Consensus:',
+                'pt': 'Consenso:',
+                'zh': '共识:'
+            }.get(current_language, 'Consenso:')
+            
+            models_text = {
+                'es': 'modelos',
+                'en': 'models',
+                'pt': 'modelos',
+                'zh': '模型'
+            }.get(current_language, 'modelos')
+            
+            fig.text(0.1, 0.49, f'{consensus_label} {consensus_count}/{len(results)} {models_text}', fontsize=12)
+
+            # Recomendaciones clave traducidas
             if recommendations:
-                fig.text(0.1, 0.4, 'RECOMENDACIONES CLAVE', fontsize=14, fontweight='bold', color='#2E8B57')
-                fig.text(0.1, 0.35, f'Gravedad: {recommendations.get("gravedad", "N/A")}', fontsize=11)
+                key_recommendations_label = {
+                    'es': 'RECOMENDACIONES CLAVE',
+                    'en': 'KEY RECOMMENDATIONS',
+                    'pt': 'RECOMENDAÇÕES CHAVE',
+                    'zh': '关键建议'
+                }.get(current_language, 'RECOMENDACIONES CLAVE')
+                
+                severity_label = {
+                    'es': 'Gravedad:',
+                    'en': 'Severity:',
+                    'pt': 'Gravidade:',
+                    'zh': '严重程度:'
+                }.get(current_language, 'Gravedad:')
+                
+                fig.text(0.1, 0.4, key_recommendations_label, fontsize=14, fontweight='bold', color='#2E8B57')
+                fig.text(0.1, 0.35, f'{severity_label} {recommendations.get("gravedad", "N/A")}', fontsize=11)
                 action = recommendations.get('tratamiento', ['N/A'])[0] if recommendations.get('tratamiento') else 'N/A'
                 if len(action) > 60:
                     action = action[:60] + "..."
